@@ -1,0 +1,12 @@
+# Excel temporary and lock files
+~$*.xls*
+*.tmp
+
+# Keep operational workbooks out of the public repository by default
+*.xlsm
+*.xlsb
+
+# Local analysis and build artifacts
+work/
+outputs/
+
