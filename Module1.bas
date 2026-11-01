@@ -458,6 +458,3 @@ Function ExtractPONumber(statusText As String) As String
         ExtractPONumber = statusText
     End If
 End Function
-
-
-The focused UI element is 0 AXWebArea raw.githubusercontent.com/prasadpai567-debug/sap-po-ordering-automation/main/Module1.bas
