@@ -3,13 +3,8 @@ Option Explicit
 
 Sub SAP_Final_Solution()
     Dim wsInput As Worksheet
-    Dim startDate As String, endDate As String
     Dim SapGuiAuto As Object, SAPGUIApp As Object, Connection As Object, Session As Object
-    Dim wbExport As Workbook
-    Dim initialWorkbookCount As Integer
     Dim i As Integer
-    Dim savePath As String
-    Dim OutApp As Object, OutMail As Object
     
     ' --- Variables for Dynamic Loop ---
     Dim lastRow As Long
@@ -17,7 +12,6 @@ Sub SAP_Final_Solution()
     Dim statusMsg As String
     Dim tbl As Object, r As Long, visRow As Long, foundRow As Long
     Dim mrpText As String
-    Dim cID As String
     Dim forceEnter As Integer
     Dim md04_sub As String
     Dim cIcon As Integer
@@ -55,6 +49,8 @@ Sub SAP_Final_Solution()
         
         On Error GoTo RowErrorHandler
 
+        If Len(strMRPArea) = 0 Then Err.Raise vbObjectError + 10, "InputValidation", "MRP area is blank."
+
         ' --- START MD04 AUTOMATION ---
         Session.findById("wnd[0]").maximize
         Session.findById("wnd[0]/tbar[0]/okcd").Text = "/NMD04"
@@ -78,6 +74,7 @@ Sub SAP_Final_Solution()
         
         ' --- CRITICAL FIX: DYNAMIC MD04 TABLE ID ---
         md04_sub = GetMD04Sub(Session)
+        If Len(md04_sub) = 0 Then Err.Raise vbObjectError + 5, "SAP_Macro", "Could not identify the MD04 table container."
         
         ' --- STEP 1: DYNAMICALLY FIND AND CONVERT PLA.OR TO PR ---
         Set tbl = Session.findById("wnd[0]/usr/subINCLUDE1XX:SAPMM61R:" & md04_sub & "/tblSAPMM61RTC_EZ")
@@ -139,6 +136,7 @@ Sub SAP_Final_Solution()
         
         ' --- STEP 2: DYNAMICALLY RE-SCAN FOR THE NEW PURREQ ---
         md04_sub = GetMD04Sub(Session) ' Re-verify container ID after refresh
+        If Len(md04_sub) = 0 Then Err.Raise vbObjectError + 5, "SAP_Macro", "Could not identify the MD04 table container after refresh."
         Set tbl = Session.findById("wnd[0]/usr/subINCLUDE1XX:SAPMM61R:" & md04_sub & "/tblSAPMM61RTC_EZ")
         foundRow = -1
         
@@ -270,8 +268,8 @@ ME21N_Warning_Handler:
             Resume
         Else
             retryCount = 0
-            Err.Clear
-            Resume Next
+            On Error GoTo RowErrorHandler
+            Err.Raise vbObjectError + 20, "ME21N", "ME21N warning could not be cleared after four attempts."
         End If
 
 ME21N_Success:
@@ -350,7 +348,7 @@ Function GetMD04Sub(Session As Object) As String
             Exit Function
         End If
     Next i
-    GetMD04Sub = "0750" ' Fallback
+    GetMD04Sub = vbNullString ' Do not guess a screen container when none was found
 End Function
 
 ' =================================================================================
@@ -372,6 +370,8 @@ Sub ExecuteSAP(Session As Object, path As String, action As String, Optional val
                 Dim idxs() As String
                 idxs = Split(val, ",")
                 obj.setSelectionIndexes CInt(idxs(0)), CInt(idxs(1))
+            Case Else
+                Err.Raise vbObjectError + 2, "ExecuteSAP", "Unsupported SAP action: " & action
         End Select
     Else
         Err.Raise vbObjectError + 1, "ExecuteSAP", "Element not found or locked by warning"
@@ -458,3 +458,6 @@ Function ExtractPONumber(statusText As String) As String
         ExtractPONumber = statusText
     End If
 End Function
+
+
+The focused UI element is 0 AXWebArea raw.githubusercontent.com/prasadpai567-debug/sap-po-ordering-automation/main/Module1.bas
