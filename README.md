@@ -124,7 +124,7 @@ The compiled VBA project may expose proprietary process logic. Publish it only w
 
 ## Testing status
 
-This repository contains no automated test suite, SAP mock layer, CI workflow, release artifact, or non-SAP execution harness. The macro was not executed against SAP during the review, and no claim is made that it has successfully created a purchase requisition or purchase order.
+This repository includes a non-SAP automated contract test suite and a GitHub Actions workflow that validate required public files, sanitized VBA source contracts, and sample CSV shape. The checks do not execute SAP GUI actions or create business documents. The macro was not executed against SAP during the review, and no claim is made that it has successfully created a purchase requisition or purchase order in every SAP environment.
 
 ## Suggested future improvements
 
@@ -167,3 +167,5 @@ Built an Excel VBA and SAP GUI Scripting automation tool for attended procuremen
 - VBA source: Module1.bas
 - Workbook review: VBA_APPLICATION_ANALYSIS.md
 - Dummy input: sample_input.csv
+- Automated contract tests: tests/test_repository_contract.py
+- Controlled validation matrix: TEST_PLAN.md
