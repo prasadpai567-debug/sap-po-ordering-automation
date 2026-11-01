@@ -24,45 +24,12 @@ jobs:
           test -f Module1.bas
           test -f README.md
           test -f sample_input.csv
+          test -d tests
           if find . -type f \( -name '*.xlsm' -o -name '*.xlsb' \) | grep -q .; then
             echo 'Workbook binaries should not be committed to this public repository.' >&2
             exit 1
           fi
 
-      - name: Validate VBA source contract
-        shell: python
-        run: |
-          from pathlib import Path
-
-          source = Path('Module1.bas').read_text(encoding='utf-8')
-          required = [
-              'Option Explicit',
-              'Sub SAP_Final_Solution()',
-              'Function GetMD04Sub',
-              'Function SafeGet',
-              'Function ExtractPONumber',
-          ]
-          missing = [item for item in required if item not in source]
-          if missing:
-              raise SystemExit(f'Missing required VBA declarations: {missing}')
-          if 'GetMD04Sub = "0750"' in source:
-              raise SystemExit('Unsupported hard-coded MD04 fallback detected.')
-          if 'The focused UI element' in source:
-              raise SystemExit('Browser/editor state text was appended to Module1.bas.')
-
-      - name: Validate sample CSV shape
-        shell: python
-        run: |
-          import csv
-          from pathlib import Path
-
-          with Path('sample_input.csv').open(newline='', encoding='utf-8') as handle:
-              reader = csv.reader(handle)
-              header = next(reader)
-              if header != ['Material', 'MRP Area', 'PO Number']:
-                  raise SystemExit(f'Unexpected CSV header: {header}')
-              rows = list(reader)
-          if not rows:
-              raise SystemExit('sample_input.csv must contain at least one sample row.')
-          if any(len(row) != 3 for row in rows):
-              raise SystemExit('Each sample_input.csv row must contain three columns.')
+      - name: Run repository contract tests
+        shell: bash
+        run: python -m unittest discover -s tests -v
